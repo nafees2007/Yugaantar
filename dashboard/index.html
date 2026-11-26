@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Multiverse of Monsoon - Climate Digital Twin Dashboard</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <header>
+    <div class="logo">
+      <span class="icon">🌀</span>
+      <h1>Multiverse of Monsoon <span>| Climate Digital Twin</span></h1>
+    </div>
+    <div class="status-badge" id="server-status">
+      <span class="dot"></span> Server: <span id="status-text">Connecting...</span>
+    </div>
+  </header>
+
+  <main>
+    <section class="controls-panel">
+      <h2>Simulation Controls</h2>
+      
+      <div class="control-group">
+        <label for="var-select">Weather Channel:</label>
+        <select id="var-select">
+          <option value="0">2m Temperature (t2m, °C)</option>
+          <option value="1" selected>Precipitation (tp, mm/day)</option>
+          <option value="2">10m Eastward Wind (u10, m/s)</option>
+          <option value="3">10m Northward Wind (v10, m/s)</option>
+          <option value="4">Mean Sea Level Pressure (msl, hPa)</option>
+          <option value="5">Column Water Vapour (tcwv, kg/m²)</option>
+        </select>
+      </div>
+
+      <div class="control-group">
+        <label for="lead-slider">Forecast Lead Day: <span id="lead-val">Day 1</span></label>
+        <input type="range" id="lead-slider" min="1" max="10" value="1">
+      </div>
+
+      <div class="control-group">
+        <label>Multiverse Shock Scenario:</label>
+        <div class="button-grid">
+          <button class="btn active" id="btn-none" onclick="setShock('none')">Timeline Prime (No Shock)</button>
+          <button class="btn" id="btn-bob" onclick="setShock('warm_ocean')">🔥 Bay of Bengal Heat (+3°C)</button>
+          <button class="btn" id="btn-arabian" onclick="setShock('monsoon_stall')">💨 Arabian Wind Stall (-40%)</button>
+        </div>
+      </div>
+
+      <button class="btn-primary" id="run-sim-btn" onclick="runSimulation()">⚡ Run 10-Day Digital Twin Rollout</button>
+
+      <div class="impact-panel">
+        <h3>🌱 Social & Agricultural Impact Module</h3>
+        <div class="metric-card">
+          <div class="metric-title">Monsoon Onset Index</div>
+          <div class="metric-value" id="onset-idx">Active / Normal</div>
+        </div>
+        <div class="metric-card">
+          <div class="metric-title">High Heatwave Risk Area</div>
+          <div class="metric-value alert" id="heat-risk">0 Districts</div>
+        </div>
+        <div class="metric-card">
+          <div class="metric-title">Heavy Rain Warning (&gt;50mm)</div>
+          <div class="metric-value warn" id="rain-risk">Coastal Konkan & Kerala</div>
+        </div>
+      </div>
+    </section>
+
+    <section class="map-view">
+      <div class="map-header">
+        <h2 id="map-title">Precipitation (tp) - Lead Day 1</h2>
+        <div class="legend" id="legend"></div>
+      </div>
+      <div class="grid-canvas-container">
+        <canvas id="gridCanvas" width="576" height="512"></canvas>
+      </div>
+      <div class="footer-meta">
+        <span>Grid: 32 Latitude × 36 Longitude (1° × 1° resolution, 6.5°N - 37.5°N, 65.5°E - 100.5°E)</span>
+        <span id="timing-info">Inference latency: ~210 ms</span>
+      </div>
+    </section>
+  </main>
+
+  <script src="app.js"></script>
+</body>
+</html>

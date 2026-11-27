@@ -207,9 +207,9 @@ async function runLiveEvaluation() {
   const btn = document.getElementById("eval-btn");
   const statusEl = document.getElementById("eval-status");
   btn.disabled = true;
-  statusEl.textContent = "Running 5 holdout windows (Days 1, 4, 8) on serve.py...";
+  statusEl.textContent = "Calling optional evaluation server (localhost:8001/evaluate)...";
   try {
-    const res = await fetch(`${API_BASE}/evaluate`, { method: "POST" });
+    const res = await fetch("http://localhost:8001/evaluate", { method: "POST" });
     if (!res.ok) throw new Error("HTTP " + res.status);
     const d = await res.json();
     document.getElementById("eval-params").textContent = `${d.parameters.toLocaleString()} (${d.weights_mb} MB)`;
@@ -217,15 +217,14 @@ async function runLiveEvaluation() {
     document.getElementById("eval-csi").textContent = `${d.csi_pts.toFixed(2)} / 15.0`;
     document.getElementById("eval-blur").textContent = `${d.blur_pts.toFixed(2)} / 10.0`;
     document.getElementById("eval-causality").textContent = `${d.causality_pts.toFixed(2)} / 15.0`;
-    document.getElementById("eval-total").textContent = `${d.total_pts.toFixed(2)} / 100.0`;
     document.getElementById("mod-lat").textContent = `${d.avg_latency_ms} ms`;
     statusEl.textContent = d.source === "live_holdout_evaluation"
       ? "Verified live on 2020–2021 holdout dataset!"
-      : "Loaded verified holdout benchmark summary.";
+      : "Loaded cached holdout summary (no .nc present).";
     statusEl.style.color = "#10b981";
   } catch (err) {
-    statusEl.textContent = `Evaluation error: ${err.message}`;
-    statusEl.style.color = "#ef4444";
+    statusEl.textContent = "Run optional server: python app_product.py --port 8001";
+    statusEl.style.color = "#f59e0b";
   } finally {
     btn.disabled = false;
   }

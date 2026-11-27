@@ -57,6 +57,7 @@ def run_benchmark():
         clim = np.load(clim_path)
     else:
         # Load from weights.pt bundle
+        # pyrefly: ignore[missing-import]
         import torch
         weights_path = Path(__file__).parent / "weights.pt"
         if weights_path.is_file():

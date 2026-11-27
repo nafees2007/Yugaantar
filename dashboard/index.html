@@ -3,84 +3,413 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Multiverse of Monsoon - Climate Digital Twin Dashboard</title>
+  <title>MONSOONVERSE — India Climate Digital Twin</title>
   <link rel="stylesheet" href="style.css">
 </head>
 <body>
-  <header>
-    <div class="logo">
-      <span class="icon">🌀</span>
-      <h1>Multiverse of Monsoon <span>| Climate Digital Twin</span></h1>
+  <div class="app-shell">
+    <!-- Left Navigation Sidebar (ISRO Mission Control Style) -->
+    <aside class="sidebar">
+      <div class="brand">
+        <svg class="brand-logo" viewBox="0 0 48 48" fill="none">
+          <circle cx="24" cy="24" r="20" stroke="#38bdf8" stroke-width="1.5" stroke-dasharray="4 3"/>
+          <path d="M10 30C16 14 32 10 38 18" stroke="#f97316" stroke-width="2.5" stroke-linecap="round"/>
+          <path d="M14 34C22 22 30 20 39 26" stroke="#38bdf8" stroke-width="2" stroke-linecap="round"/>
+          <circle cx="24" cy="24" r="4" fill="#facc15"/>
+          <rect x="34" y="10" width="8" height="4" rx="1" transform="rotate(-25 34 10)" fill="#38bdf8"/>
+        </svg>
+        <div>
+          <div class="brand-title">MONSOONVERSE</div>
+          <div class="brand-sub">India Climate Digital Twin</div>
+        </div>
+      </div>
+
+      <nav class="nav-menu">
+        <button class="nav-item active" data-nav="overview" onclick="switchNav('overview')">
+          <span class="nav-icon">🏠</span> Overview
+        </button>
+        <button class="nav-item" data-nav="prime" onclick="switchNav('prime')">
+          <span class="nav-icon">📅</span> Timeline Prime
+        </button>
+        <button class="nav-item" data-nav="multiverse" onclick="switchNav('multiverse')">
+          <span class="nav-icon">🧬</span> Multiverse Lab
+        </button>
+        <button class="nav-item" data-nav="compare" onclick="switchNav('compare')">
+          <span class="nav-icon">⚖️</span> Scenario Comparison
+        </button>
+        <button class="nav-item" data-nav="impact" onclick="switchNav('impact')">
+          <span class="nav-icon">📊</span> Impact Intelligence
+        </button>
+        <button class="nav-item" data-nav="model" onclick="switchNav('model')">
+          <span class="nav-icon">🧠</span> Model Intelligence
+        </button>
+        <button class="nav-item" data-nav="docs" onclick="switchNav('docs')">
+          <span class="nav-icon">📖</span> Documentation
+        </button>
+      </nav>
+
+      <div class="sidebar-footer">
+        <div class="earth-glow"></div>
+        <div class="isro-badge">
+          <div class="isro-title">ISRO Inspired</div>
+          <div class="isro-sub">Climate Intelligence</div>
+        </div>
+      </div>
+    </aside>
+
+    <!-- Main Workspace -->
+    <div class="main-area">
+      <!-- Top Telemetry Bar -->
+      <header class="topbar">
+        <div class="topbar-left">
+          <span class="pill-tag" id="active-scenario-pill">Preset: Peak Monsoon (July 2020)</span>
+          <span class="pill-tag shock-pill hidden" id="active-shock-pill">Shock: None</span>
+        </div>
+        <div class="topbar-right">
+          <div class="status-item"><span class="dot" id="sys-dot"></span> <span id="sys-text">Checking...</span></div>
+          <div class="sep">|</div>
+          <div class="status-item"><span class="dot" id="api-dot"></span> <span id="api-text">API Connecting</span></div>
+          <div class="sep">|</div>
+          <div class="status-item muted" id="last-run-text">Last Run: —</div>
+          <div class="avatar-circle" title="Digital Twin Operator">🛰️</div>
+        </div>
+      </header>
+
+      <!-- Top 4 KPI Telemetry Cards -->
+      <section class="kpi-row">
+        <div class="kpi-card" title="Mean 2m air temperature over Indian land grid cells (1°×1°)">
+          <div class="kpi-icon temp-icon">🌡️</div>
+          <div class="kpi-body">
+            <div class="kpi-label">India Land Temp</div>
+            <div class="kpi-val-row">
+              <span class="kpi-val" id="kpi-temp">— °C</span>
+              <span class="kpi-delta" id="kpi-temp-d"></span>
+            </div>
+          </div>
+        </div>
+
+        <div class="kpi-card" title="Mean daily precipitation over Indian land grid cells">
+          <div class="kpi-icon rain-icon">🌧️</div>
+          <div class="kpi-body">
+            <div class="kpi-label">India Land Rainfall</div>
+            <div class="kpi-val-row">
+              <span class="kpi-val" id="kpi-rain">— mm/day</span>
+              <span class="kpi-delta" id="kpi-rain-d"></span>
+            </div>
+          </div>
+        </div>
+
+        <div class="kpi-card" title="Mean 10m wind speed over Indian land grid cells (surface friction reduces land wind vs ocean jet)">
+          <div class="kpi-icon wind-icon">💨</div>
+          <div class="kpi-body">
+            <div class="kpi-label">Land Avg Wind</div>
+            <div class="kpi-val-row">
+              <span class="kpi-val" id="kpi-wind">— m/s</span>
+              <span class="kpi-delta" id="kpi-wind-d"></span>
+            </div>
+          </div>
+        </div>
+
+        <div class="kpi-card" title="Mean Total Column Water Vapour over Indian land grid cells">
+          <div class="kpi-icon moist-icon">💧</div>
+          <div class="kpi-body">
+            <div class="kpi-label">Land Moisture (TCWV)</div>
+            <div class="kpi-val-row">
+              <span class="kpi-val" id="kpi-moist">— kg/m²</span>
+              <span class="kpi-delta" id="kpi-moist-d"></span>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- Center Content Grid: India Map + Dynamic Right Panel -->
+      <section class="workspace-grid" id="main-workspace">
+        <!-- India Weather Map Card -->
+        <div class="map-card">
+          <div class="map-card-header">
+            <div class="map-title-group">
+              <span class="map-icon">🗺️</span>
+              <span class="map-title">India Weather Map</span>
+              <span class="mode-chip" id="view-chip">TIMELINE PRIME</span>
+              <span class="res-note" title="Model predicts on 32×36 (1°×1°) grid; smoothly upsampled via bilinear interpolation">1°×1° Grid (Upsampled)</span>
+            </div>
+            <div class="map-controls-inline">
+              <select id="preset-select" class="mini-select" title="Initial 3-Day State">
+                <option value="monsoon_july">July Monsoon</option>
+                <option value="heatwave_may">May Heatwave</option>
+                <option value="post_monsoon_oct">Oct Transition</option>
+              </select>
+              <select id="var-select" class="mini-select">
+                <option value="1" selected>Rainfall (mm/day)</option>
+                <option value="0">Temperature (°C)</option>
+                <option value="2">Eastward Wind (m/s)</option>
+                <option value="3">Northward Wind (m/s)</option>
+                <option value="4">Pressure (hPa)</option>
+                <option value="5">Moisture (kg/m²)</option>
+              </select>
+              <select id="lead-select" class="mini-select">
+                <option value="1">Day 1</option>
+                <option value="2">Day 2</option>
+                <option value="3">Day 3</option>
+                <option value="4">Day 4</option>
+                <option value="5">Day 5</option>
+                <option value="6">Day 6</option>
+                <option value="7">Day 7</option>
+                <option value="8">Day 8</option>
+                <option value="9">Day 9</option>
+                <option value="10">Day 10</option>
+              </select>
+              <button class="mini-play-btn" id="play-btn" onclick="togglePlay()">▶</button>
+            </div>
+          </div>
+
+          <div class="map-canvas-box" id="map-box">
+            <!-- Zoom & View Controls (Top-Left) -->
+            <div class="map-zoom-controls">
+              <button onclick="zoomMap(1.2)" title="Zoom In">+</button>
+              <button onclick="zoomMap(1/1.2)" title="Zoom Out">−</button>
+              <button onclick="resetZoom()" title="Reset View">⌖</button>
+            </div>
+
+            <!-- View Mode Quick Switcher (Bottom-Left) -->
+            <div class="map-mode-pills">
+              <button class="m-pill active" id="mp-prime" onclick="setViewMode('prime')">Prime</button>
+              <button class="m-pill" id="mp-branch" onclick="setViewMode('branch')">Branch</button>
+              <button class="m-pill" id="mp-delta" onclick="setViewMode('delta')">Δ Diff</button>
+              <button class="m-pill" id="mp-clip" onclick="toggleIndiaClip()" title="Toggle India-only clip vs full domain">🇮🇳 India Clip: ON</button>
+            </div>
+
+            <canvas id="indiaCanvas" width="840" height="540"></canvas>
+
+            <!-- Vertical Colorbar Legend (Right side inside map) -->
+            <div class="v-colorbar" id="v-colorbar">
+              <div class="v-bar-labels" id="v-bar-labels">
+                <span>100+</span><span>50</span><span>25</span><span>10</span><span>5</span><span>1</span>
+              </div>
+              <div class="v-bar-grad" id="v-bar-grad"></div>
+            </div>
+
+            <div id="hover-tooltip" class="tooltip hidden"></div>
+          </div>
+        </div>
+
+        <!-- Right Dynamic Panel (Changes based on selected sidebar section) -->
+        <div class="right-stack" id="right-panel">
+          <!-- Panel 1: Overview (Quick Actions + Forecast Summary) -->
+          <div class="panel-group" id="panel-overview">
+            <div class="glass-card">
+              <div class="card-head">⚡ Quick Actions</div>
+              <div class="action-buttons">
+                <button class="btn-grad-blue" onclick="runTimelinePrimeAction()">
+                  <span>Run Timeline Prime</span> <span>▶</span>
+                </button>
+                <button class="btn-grad-purple" onclick="switchNav('multiverse')">
+                  <span>Open Multiverse Lab</span> <span>⚡</span>
+                </button>
+                <button class="btn-dark-outline" onclick="switchNav('impact')">
+                  <span>View Detailed Analysis</span> <span>→</span>
+                </button>
+              </div>
+            </div>
+
+            <div class="glass-card summary-card">
+              <div class="card-head">📈 Forecast Summary</div>
+              <div class="outlook-row">
+                <span class="outlook-icon" id="outlook-icon">🌦️</span>
+                <div>
+                  <div class="outlook-title">Monsoon Outlook: <strong id="outlook-status" class="text-green">Active</strong></div>
+                  <div class="outlook-desc" id="outlook-desc">Well distributed rainfall across India.</div>
+                </div>
+              </div>
+              <div class="mini-alerts">
+                <div class="alert-row" title="Mean daily rainfall over Central &amp; IGP Kharif belt (16.5°N–29.5°N, 74.5°E–86.5°E)">
+                  <span>🌱 Kharif Crop Moisture</span>
+                  <strong id="ov-crop" class="text-green">—</strong>
+                </div>
+                <div class="alert-row" title="Share of Indian land cells with daily-mean temperature &gt; 33.5°C (corresponds to &gt;40°C daytime peak)">
+                  <span>🔥 Heatwave (&gt;33.5°C Mean)</span>
+                  <strong id="ov-heat" class="text-amber">—</strong>
+                </div>
+                <div class="alert-row" title="Count of Indian land cells exceeding 20 mm/day heavy convective rainfall">
+                  <span>🌊 Heavy Rain (&gt;20 mm/d)</span>
+                  <strong id="ov-flood" class="text-red">—</strong>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Panel 2: Timeline Prime Controls -->
+          <div class="panel-group hidden" id="panel-prime">
+            <div class="glass-card">
+              <div class="card-head">📅 Timeline Prime Controls</div>
+              <label class="ctrl-label">Initial 3-Day Window (Holdout)</label>
+              <select id="preset-select-2" class="full-select" onchange="syncPreset(this.value)">
+                <option value="monsoon_july">Peak Monsoon (July 2020)</option>
+                <option value="heatwave_may">Pre-Monsoon Heatwave (May 2020)</option>
+                <option value="post_monsoon_oct">Post-Monsoon Transition (Oct 2020)</option>
+              </select>
+
+              <label class="ctrl-label">Forecast Lead Day: <strong id="prime-day-lbl">Day 1</strong> / 10</label>
+              <input type="range" id="lead-slider" min="1" max="10" value="1" class="full-range">
+
+              <div class="toggle-list">
+                <label class="chk-row"><input type="checkbox" id="wind-toggle" checked onchange="renderMap()"> 10m Wind Vectors</label>
+                <label class="chk-row"><input type="checkbox" id="state-toggle" checked onchange="renderMap()"> India State Borders</label>
+                <label class="chk-row"><input type="checkbox" id="city-toggle" checked onchange="renderMap()"> Major Cities</label>
+                <label class="chk-row"><input type="checkbox" id="smooth-toggle" checked onchange="renderMap()"> Bilinear Radar Smoothing</label>
+              </div>
+
+              <button class="btn-grad-blue" style="margin-top:10px" onclick="runSimulation()">⚡ Re-Run Timeline Prime</button>
+
+              <div class="custom-box" style="margin-top:8px">
+                <label class="ctrl-label" style="margin-top:0">📂 Judge 3-Day Input JSON ([3, 6, 32, 36])</label>
+                <input type="file" id="judge-json-file" accept=".json" onchange="loadJudgeJson(event)" style="font-size:11px;color:#cbd5e1;">
+                <button class="shock-btn" onclick="downloadSampleJson()" style="text-align:center;font-size:11px;margin-top:2px">⬇ Download Sample 3-Day JSON</button>
+                <div class="hint-text" id="judge-json-status">Accepts {"init_states": [3,6,32,36], "doy_sincos": [s,c]}</div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Panel 3: Multiverse Lab (Shock Studio) -->
+          <div class="panel-group hidden" id="panel-multiverse">
+            <div class="glass-card">
+              <div class="card-head">🧬 Multiverse Shock Lab</div>
+              <div class="shock-btn-list">
+                <button class="shock-btn active" id="sb-none" onclick="setShock('none')">🌍 Zero Shock (Timeline Prime)</button>
+                <button class="shock-btn" id="sb-bob" onclick="setShock('warm_ocean')">🔥 Bay of Bengal Heat (+3°C)</button>
+                <button class="shock-btn" id="sb-arabian" onclick="setShock('monsoon_stall')">💨 Arabian Wind Stall (-40%)</button>
+                <button class="shock-btn" id="sb-custom" onclick="setShock('custom')">🎯 Custom Click-on-Map Shock</button>
+              </div>
+
+              <div id="custom-shock-box" class="custom-box hidden">
+                <label class="ctrl-label">Shock Variable</label>
+                <select id="custom-var" class="full-select" onchange="updateCustomLabel()">
+                  <option value="t2m">2m Temperature (ΔT, K)</option>
+                  <option value="tcwv">Moisture (ΔTCWV, kg/m²)</option>
+                  <option value="u10">Eastward Wind (ΔU, m/s)</option>
+                  <option value="v10">Northward Wind (ΔV, m/s)</option>
+                  <option value="msl">Sea Level Pressure (ΔMSL, hPa)</option>
+                </select>
+                <label class="ctrl-label">Intensity: <strong id="custom-mag-val">+3.5 K</strong></label>
+                <input type="range" id="custom-mag" min="-5" max="5" step="0.5" value="3.5" class="full-range" oninput="updateCustomLabel()">
+                <label class="ctrl-label">Footprint Radius</label>
+                <select id="custom-rad" class="full-select" onchange="runSimulation()">
+                  <option value="1">Localized (3×3)</option>
+                  <option value="2" selected>Meso-scale (5×5)</option>
+                  <option value="3">Regional (7×7)</option>
+                </select>
+                <div class="hint-text">📍 Click anywhere on the map to inject at (<span id="custom-coords">20.5°N, 81.5°E</span>)</div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Panel 4: Scenario Comparison -->
+          <div class="panel-group hidden" id="panel-compare">
+            <div class="glass-card">
+              <div class="card-head">⚖️ Regional Comparison (Day <span id="cmp-day">1</span>)</div>
+              <table class="cmp-table">
+                <thead>
+                  <tr><th>Basin</th><th>Prime</th><th>Branch</th><th>Δ</th></tr>
+                </thead>
+                <tbody id="cmp-tbody"></tbody>
+              </table>
+              <div class="cmp-actions">
+                <button class="shock-btn" onclick="setViewMode('delta')">Show Δ Ripple Map</button>
+                <button class="shock-btn" onclick="setViewMode('branch')">Show Branch Map</button>
+              </div>
+            </div>
+          </div>
+
+          <!-- Panel 5: Impact Intelligence -->
+          <div class="panel-group hidden" id="panel-impact">
+            <div class="glass-card">
+              <div class="card-head">🌱 Agricultural &amp; Hazard Impact</div>
+              <div class="impact-stat" title="Mean daily rainfall over Central &amp; IGP Kharif belt (16.5°N–29.5°N, 74.5°E–86.5°E)">
+                <div>Kharif Belt Moisture</div>
+                <strong id="imp-crop" class="text-green">—</strong>
+                <small id="imp-crop-d"></small>
+              </div>
+              <div class="impact-stat" title="Share of Indian land cells with daily-mean temperature &gt; 33.5°C (corresponds to &gt;40°C daytime peak)">
+                <div>Heatwave (&gt;33.5°C Daily Mean)</div>
+                <strong id="imp-heat" class="text-red">—</strong>
+                <small id="imp-heat-d"></small>
+              </div>
+              <div class="impact-stat" title="Indian land cells exceeding 20 mm/day heavy convective rainfall">
+                <div>Heavy Rain Risk (&gt;20 mm/d)</div>
+                <strong id="imp-flood" class="text-amber">—</strong>
+                <small id="imp-flood-d"></small>
+              </div>
+            </div>
+          </div>
+
+          <!-- Panel 6: Model Intelligence -->
+          <div class="panel-group hidden" id="panel-model">
+            <div class="glass-card">
+              <div class="card-head">🧠 Model &amp; Benchmark Telemetry</div>
+              <div class="spec-list">
+                <div><span>Architecture</span><strong>Dilated Residual CNN</strong></div>
+                <div><span>Parameters</span><strong id="eval-params">197,670 (16.9 MB)</strong></div>
+                <div><span>RMSE Skill Score</span><strong id="eval-rmse" class="text-green">22.09 / 30.0</strong></div>
+                <div><span>Heavy-Rain CSI</span><strong id="eval-csi" class="text-green">10.00 / 15.0</strong></div>
+                <div><span>Anti-Blur Ratio</span><strong id="eval-blur" class="text-green">9.49 / 10.0</strong></div>
+                <div><span>Shock Causality</span><strong id="eval-causality" class="text-green">15.00 / 15.0</strong></div>
+                <div><span>Total Est. Score</span><strong id="eval-total" class="text-accent">84.58 / 100.0</strong></div>
+                <div><span>CPU Latency</span><strong id="mod-lat">~189 ms</strong></div>
+              </div>
+              <button class="btn-grad-blue" id="eval-btn" onclick="runLiveEvaluation()" style="margin-top:6px">
+                <span>Run Live Model Evaluation</span> <span>📊</span>
+              </button>
+              <div class="hint-text" id="eval-status">Evaluates 5 holdout windows (Days 1, 4, 8) live on serve.py</div>
+            </div>
+          </div>
+
+          <!-- Panel 7: Documentation -->
+          <div class="panel-group hidden" id="panel-docs">
+            <div class="glass-card">
+              <div class="card-head">📖 System Contract &amp; Docs</div>
+              <div class="doc-text">
+                <p><strong>Grid Domain:</strong> 6.5°N–37.5°N, 65.5°E–100.5°E (32×36 @ 1°)</p>
+                <p><strong>Channels:</strong> t2m (K), tp (mm/d), u10, v10 (m/s), msl (Pa), tcwv (kg/m²)</p>
+                <p><strong>Endpoints:</strong> <code>POST /health</code> &amp; <code>POST /simulate</code></p>
+                <p><strong>Drift Guard:</strong> Anomaly modeling + DOY climatology blending + physical clamping.</p>
+                <p><strong>Causality:</strong> Wind-advected diffusion + Clausius-Clapeyron coupling; zero shock = 0 delta.</p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- Bottom 3 Trend Charts -->
+      <section class="trends-row">
+        <div class="trend-card">
+          <div class="trend-head">
+            <span>🌡️ Temperature Trend</span>
+            <span class="trend-badge amber" id="tr-temp-badge">—</span>
+          </div>
+          <canvas id="tempChart" width="340" height="92"></canvas>
+        </div>
+
+        <div class="trend-card">
+          <div class="trend-head">
+            <span>🌧️ Rainfall Trend</span>
+            <span class="trend-badge green" id="tr-rain-badge">—</span>
+          </div>
+          <canvas id="rainChart" width="340" height="92"></canvas>
+        </div>
+
+        <div class="trend-card">
+          <div class="trend-head">
+            <span>💨 Wind Trend</span>
+            <span class="trend-badge cyan" id="tr-wind-badge">—</span>
+          </div>
+          <canvas id="windChart" width="340" height="92"></canvas>
+        </div>
+      </section>
     </div>
-    <div class="status-badge" id="server-status">
-      <span class="dot"></span> Server: <span id="status-text">Connecting...</span>
-    </div>
-  </header>
+  </div>
 
-  <main>
-    <section class="controls-panel">
-      <h2>Simulation Controls</h2>
-      
-      <div class="control-group">
-        <label for="var-select">Weather Channel:</label>
-        <select id="var-select">
-          <option value="0">2m Temperature (t2m, °C)</option>
-          <option value="1" selected>Precipitation (tp, mm/day)</option>
-          <option value="2">10m Eastward Wind (u10, m/s)</option>
-          <option value="3">10m Northward Wind (v10, m/s)</option>
-          <option value="4">Mean Sea Level Pressure (msl, hPa)</option>
-          <option value="5">Column Water Vapour (tcwv, kg/m²)</option>
-        </select>
-      </div>
-
-      <div class="control-group">
-        <label for="lead-slider">Forecast Lead Day: <span id="lead-val">Day 1</span></label>
-        <input type="range" id="lead-slider" min="1" max="10" value="1">
-      </div>
-
-      <div class="control-group">
-        <label>Multiverse Shock Scenario:</label>
-        <div class="button-grid">
-          <button class="btn active" id="btn-none" onclick="setShock('none')">Timeline Prime (No Shock)</button>
-          <button class="btn" id="btn-bob" onclick="setShock('warm_ocean')">🔥 Bay of Bengal Heat (+3°C)</button>
-          <button class="btn" id="btn-arabian" onclick="setShock('monsoon_stall')">💨 Arabian Wind Stall (-40%)</button>
-        </div>
-      </div>
-
-      <button class="btn-primary" id="run-sim-btn" onclick="runSimulation()">⚡ Run 10-Day Digital Twin Rollout</button>
-
-      <div class="impact-panel">
-        <h3>🌱 Social & Agricultural Impact Module</h3>
-        <div class="metric-card">
-          <div class="metric-title">Monsoon Onset Index</div>
-          <div class="metric-value" id="onset-idx">Active / Normal</div>
-        </div>
-        <div class="metric-card">
-          <div class="metric-title">High Heatwave Risk Area</div>
-          <div class="metric-value alert" id="heat-risk">0 Districts</div>
-        </div>
-        <div class="metric-card">
-          <div class="metric-title">Heavy Rain Warning (&gt;50mm)</div>
-          <div class="metric-value warn" id="rain-risk">Coastal Konkan & Kerala</div>
-        </div>
-      </div>
-    </section>
-
-    <section class="map-view">
-      <div class="map-header">
-        <h2 id="map-title">Precipitation (tp) - Lead Day 1</h2>
-        <div class="legend" id="legend"></div>
-      </div>
-      <div class="grid-canvas-container">
-        <canvas id="gridCanvas" width="576" height="512"></canvas>
-      </div>
-      <div class="footer-meta">
-        <span>Grid: 32 Latitude × 36 Longitude (1° × 1° resolution, 6.5°N - 37.5°N, 65.5°E - 100.5°E)</span>
-        <span id="timing-info">Inference latency: ~210 ms</span>
-      </div>
-    </section>
-  </main>
-
+  <script src="samples.js"></script>
+  <script src="india_geo.js"></script>
   <script src="app.js"></script>
 </body>
 </html>

@@ -10,8 +10,10 @@ import json
 from pathlib import Path
 from typing import Dict, Optional, Tuple
 
+# pyrefly: ignore[missing-import]
 import h5py
 import numpy as np
+# pyrefly: ignore[missing-import]
 from scipy.ndimage import shift, gaussian_filter
 
 CHANNELS = ("t2m", "tp", "u10", "v10", "msl", "tcwv")

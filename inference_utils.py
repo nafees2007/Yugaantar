@@ -9,6 +9,7 @@ import json
 from pathlib import Path
 from typing import Dict, Optional
 import numpy as np
+# pyrefly: ignore[missing-import]
 from scipy.ndimage import gaussian_filter, shift
 
 CHANNELS = ("t2m", "tp", "u10", "v10", "msl", "tcwv")
@@ -115,7 +116,22 @@ def evolve_physical_shock(
     if shock is None or np.all(shock == 0):
         return np.zeros((NC, NLAT, NLON), dtype=np.float32)
 
-    m = np.abs(shock).sum(axis=0) > 0
+    # Cross-channel physical coupling (computed locally before advection/diffusion)
+    coupled = shock.astype(np.float32).copy()
+    dT = shock[0]
+    if np.any(dT != 0):
+        # Clausius-Clapeyron moisture boost (~6-7%/K -> ~0.5 kg/m2 per K), thermal low, convective nudge
+        coupled[5] = coupled[5] + 0.5 * dT
+        coupled[4] = coupled[4] - 35.0 * dT
+        coupled[1] = coupled[1] + 0.7 * dT
+
+    dW = shock[2] + shock[3]
+    if np.any(dW != 0):
+        # Weaker monsoon inflow reduces moisture transport and rainfall
+        coupled[1] = coupled[1] + 0.4 * dW
+        coupled[5] = coupled[5] + 0.4 * dW
+
+    m = np.abs(coupled).sum(axis=0) > 0
     u_mean = float(wind_u[m].mean()) if m.any() else float(wind_u.mean())
     v_mean = float(wind_v[m].mean()) if m.any() else float(wind_v.mean())
 
@@ -131,9 +147,9 @@ def evolve_physical_shock(
     sigma = 0.15 + 0.4 * (step - 1)
     damping = 0.95 ** (step - 1)
 
-    out = np.zeros_like(shock, dtype=np.float32)
-    for c in range(shock.shape[0]):
-        s = shift(shock[c], (shift_v, shift_u), mode="constant", cval=0.0)
+    out = np.zeros_like(coupled, dtype=np.float32)
+    for c in range(coupled.shape[0]):
+        s = shift(coupled[c], (shift_v, shift_u), mode="constant", cval=0.0)
         s = gaussian_filter(s, sigma=sigma, mode="constant", cval=0.0)
         out[c] = s * damping
 

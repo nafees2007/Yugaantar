@@ -176,10 +176,21 @@
               <button class="m-pill active" id="mp-prime" onclick="setViewMode('prime')">Prime</button>
               <button class="m-pill" id="mp-branch" onclick="setViewMode('branch')">Branch</button>
               <button class="m-pill" id="mp-delta" onclick="setViewMode('delta')">Δ Diff</button>
+              <button class="m-pill" id="mp-split" onclick="setViewMode('split')">Split</button>
               <button class="m-pill" id="mp-clip" onclick="toggleIndiaClip()" title="Toggle India-only clip vs full domain">🇮🇳 India Clip: ON</button>
             </div>
 
-            <canvas id="indiaCanvas" width="840" height="540"></canvas>
+            <div class="canvas-pair" id="canvas-pair">
+              <div class="c-slot">
+                <span class="slot-lbl hidden" id="lbl-primary">PRIME</span>
+                <canvas id="indiaCanvas" width="840" height="540"></canvas>
+                <canvas id="windOverlay" width="840" height="540"></canvas>
+              </div>
+              <div class="c-slot hidden" id="split-slot">
+                <span class="slot-lbl branch-lbl">BRANCH</span>
+                <canvas id="splitCanvas" width="840" height="540"></canvas>
+              </div>
+            </div>
 
             <!-- Vertical Colorbar Legend (Right side inside map) -->
             <div class="v-colorbar" id="v-colorbar">
@@ -190,6 +201,20 @@
             </div>
 
             <div id="hover-tooltip" class="tooltip hidden"></div>
+          </div>
+
+          <!-- Clickable Day 1..10 Scrubber Bar -->
+          <div class="day-scrubber" id="day-scrubber">
+            <button class="day-btn active" onclick="setLeadDay(1)">D1</button>
+            <button class="day-btn" onclick="setLeadDay(2)">D2</button>
+            <button class="day-btn" onclick="setLeadDay(3)">D3</button>
+            <button class="day-btn" onclick="setLeadDay(4)">D4</button>
+            <button class="day-btn" onclick="setLeadDay(5)">D5</button>
+            <button class="day-btn" onclick="setLeadDay(6)">D6</button>
+            <button class="day-btn" onclick="setLeadDay(7)">D7</button>
+            <button class="day-btn" onclick="setLeadDay(8)">D8</button>
+            <button class="day-btn" onclick="setLeadDay(9)">D9</button>
+            <button class="day-btn" onclick="setLeadDay(10)">D10</button>
           </div>
         </div>
 

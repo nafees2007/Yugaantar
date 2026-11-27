@@ -273,9 +273,23 @@ function setViewMode(mode, shouldRender = true) {
   });
   document.getElementById(`mp-${mode}`).classList.add("active");
 
-  const chipText = { prime: "TIMELINE PRIME", branch: "MULTIVERSE BRANCH", delta: "CAUSAL Δ RIPPLE" };
+  const isSplit = mode === "split";
+  document.getElementById("split-slot").classList.toggle("hidden", !isSplit);
+  document.getElementById("lbl-primary").classList.toggle("hidden", !isSplit);
+  document.getElementById("windOverlay").classList.toggle("hidden", isSplit);
+
+  const chipText = { prime: "TIMELINE PRIME", branch: "MULTIVERSE BRANCH", delta: "CAUSAL Δ RIPPLE", split: "PRIME vs BRANCH SPLIT" };
   document.getElementById("view-chip").textContent = chipText[mode];
   if (shouldRender) renderMap();
+}
+
+function setLeadDay(day) {
+  currentLead = day;
+  document.getElementById("lead-select").value = day;
+  document.getElementById("lead-slider").value = day;
+  document.getElementById("prime-day-lbl").textContent = `Day ${day}`;
+  document.querySelectorAll(".day-btn").forEach((b, idx) => b.classList.toggle("active", idx + 1 === day));
+  renderMap(); updateKPIsAndSummaries(); drawBottomTrends();
 }
 
 function buildPerturbation() {
@@ -461,11 +475,20 @@ function traceIndiaPath(ctx, W, H) {
 
 function renderMap() {
   if (!primeRollout || !branchRollout) return;
-  const canvas = document.getElementById("indiaCanvas");
+  const primary = document.getElementById("indiaCanvas");
+  if (currentView === "split") {
+    renderMapToCanvas(primary, "prime");
+    renderMapToCanvas(document.getElementById("splitCanvas"), "branch");
+  } else {
+    renderMapToCanvas(primary, currentView);
+  }
+}
+
+function renderMapToCanvas(canvas, fieldMode) {
   const ctx = canvas.getContext("2d");
   const W = canvas.width, H = canvas.height;
   const tIdx = currentLead - 1;
-  const isDelta = currentView === "delta";
+  const isDelta = fieldMode === "delta";
   const smooth = document.getElementById("smooth-toggle") ? document.getElementById("smooth-toggle").checked : true;
   const showWinds = document.getElementById("wind-toggle") ? document.getElementById("wind-toggle").checked : true;
   const showStates = document.getElementById("state-toggle") ? document.getElementById("state-toggle").checked : true;
@@ -478,8 +501,8 @@ function renderMap() {
     Array.from({ length: 36 }, (_, c) => {
       const p = toDisplayUnit(primeRollout[tIdx][currentVar][r][c], currentVar);
       const b = toDisplayUnit(branchRollout[tIdx][currentVar][r][c], currentVar);
-      if (currentView === "prime") return p;
-      if (currentView === "branch") return b;
+      if (fieldMode === "prime") return p;
+      if (fieldMode === "branch") return b;
       return b - p;
     })
   );
@@ -553,22 +576,22 @@ function renderMap() {
   ctx.drawImage(off, 0, 0, W, H);
   ctx.restore();
 
-  // Crisp White Indian State Borders
+  // Crisp White Indian State & District Borders (Survey of India bounds up to 37.08N)
   if (showStates && typeof INDIA_STATES !== "undefined") {
-    ctx.strokeStyle = "rgba(0, 0, 0, 0.45)";
-    ctx.lineWidth = 1.8;
+    ctx.strokeStyle = "rgba(0, 0, 0, 0.35)";
+    ctx.lineWidth = 1.1;
     traceIndiaPath(ctx, W, H);
     ctx.stroke();
 
-    ctx.strokeStyle = "rgba(255, 255, 255, 0.88)";
-    ctx.lineWidth = 0.95;
+    ctx.strokeStyle = "rgba(255, 255, 255, 0.45)";
+    ctx.lineWidth = 0.55;
     traceIndiaPath(ctx, W, H);
     ctx.stroke();
   }
 
   // 10m Wind Vectors (flowing across Ocean & India!)
   if (showWinds) {
-    const srcRoll = currentView === "prime" ? primeRollout : branchRollout;
+    const srcRoll = fieldMode === "prime" ? primeRollout : branchRollout;
     ctx.strokeStyle = "rgba(226, 232, 240, 0.52)";
     ctx.fillStyle = "rgba(248, 250, 252, 0.72)";
     ctx.lineWidth = 1.1;
@@ -613,7 +636,7 @@ function renderMap() {
   }
 
   // Shock Box Overlay
-  if (currentShock !== "none" && currentView !== "prime") {
+  if (currentShock !== "none" && fieldMode !== "prime") {
     ctx.strokeStyle = "#facc15";
     ctx.lineWidth = 2;
     ctx.setLineDash([5, 4]);
@@ -809,11 +832,7 @@ function togglePlay() {
   } else {
     btn.textContent = "⏸";
     playTimer = setInterval(() => {
-      currentLead = (currentLead % 10) + 1;
-      document.getElementById("lead-select").value = currentLead;
-      document.getElementById("lead-slider").value = currentLead;
-      document.getElementById("prime-day-lbl").textContent = `Day ${currentLead}`;
-      renderMap(); updateKPIsAndSummaries(); drawBottomTrends();
+      setLeadDay((currentLead % 10) + 1);
     }, 650);
   }
 }
@@ -823,18 +842,8 @@ document.getElementById("var-select").addEventListener("change", (e) => {
   currentVar = parseInt(e.target.value, 10);
   renderMap(); updateKPIsAndSummaries();
 });
-document.getElementById("lead-select").addEventListener("change", (e) => {
-  currentLead = parseInt(e.target.value, 10);
-  document.getElementById("lead-slider").value = currentLead;
-  document.getElementById("prime-day-lbl").textContent = `Day ${currentLead}`;
-  renderMap(); updateKPIsAndSummaries(); drawBottomTrends();
-});
-document.getElementById("lead-slider").addEventListener("input", (e) => {
-  currentLead = parseInt(e.target.value, 10);
-  document.getElementById("lead-select").value = currentLead;
-  document.getElementById("prime-day-lbl").textContent = `Day ${currentLead}`;
-  renderMap(); updateKPIsAndSummaries(); drawBottomTrends();
-});
+document.getElementById("lead-select").addEventListener("change", (e) => setLeadDay(parseInt(e.target.value, 10)));
+document.getElementById("lead-slider").addEventListener("input", (e) => setLeadDay(parseInt(e.target.value, 10)));
 
 const canvasEl = document.getElementById("indiaCanvas");
 canvasEl.addEventListener("mousemove", (e) => {
@@ -878,7 +887,83 @@ canvasEl.addEventListener("click", (e) => {
   }
 });
 
+// Animated Flowing Wind Streamlines + Shock Origin Pulse on #windOverlay
+const WIND_PARTICLES = Array.from({ length: 160 }, () => ({
+  gx: Math.random() * 35,
+  gy: Math.random() * 31,
+  age: Math.floor(Math.random() * 60)
+}));
+
+let pulseTick = 0;
+function animateWindOverlay() {
+  const overlay = document.getElementById("windOverlay");
+  if (overlay && primeRollout && currentView !== "split") {
+    const ctx = overlay.getContext("2d");
+    const W = overlay.width, H = overlay.height;
+    ctx.clearRect(0, 0, W, H);
+
+    const showWinds = document.getElementById("wind-toggle") ? document.getElementById("wind-toggle").checked : true;
+    const tIdx = currentLead - 1;
+    const srcRoll = currentView === "prime" ? primeRollout : branchRollout;
+
+    ctx.save();
+    if (mapZoom > 1.0) {
+      const cx = lonToX(81.0, W), cy = latToY(21.5, H);
+      ctx.translate(cx, cy);
+      ctx.scale(mapZoom, mapZoom);
+      ctx.translate(-cx, -cy);
+    }
+
+    if (showWinds && srcRoll) {
+      const uGrid = srcRoll[tIdx][2], vGrid = srcRoll[tIdx][3];
+      ctx.lineWidth = 1.4;
+      for (const p of WIND_PARTICLES) {
+        const u = sampleBilinear(uGrid, p.gx, p.gy);
+        const v = sampleBilinear(vGrid, p.gx, p.gy);
+        const x0 = ((p.gx + 0.5) / 36.0) * W;
+        const y0 = H - ((p.gy + 0.5) / 32.0) * H;
+        p.gx += u * 0.032;
+        p.gy += v * 0.032;
+        p.age++;
+        const x1 = ((p.gx + 0.5) / 36.0) * W;
+        const y1 = H - ((p.gy + 0.5) / 32.0) * H;
+
+        const spd = Math.hypot(u, v);
+        ctx.strokeStyle = `rgba(224, 242, 254, ${Math.min(0.68, 0.15 + spd * 0.055)})`;
+        ctx.beginPath();
+        ctx.moveTo(x0, y0);
+        ctx.lineTo(x1, y1);
+        ctx.stroke();
+
+        if (p.age > 55 || p.gx < 0 || p.gx > 35 || p.gy < 0 || p.gy > 31) {
+          p.gx = Math.random() * 35;
+          p.gy = Math.random() * 31;
+          p.age = 0;
+        }
+      }
+    }
+
+    // Pulsing Target Ring for Active Shock
+    if (currentShock !== "none" && currentView !== "prime") {
+      pulseTick = (pulseTick + 0.06) % (Math.PI * 2);
+      const cellW = W / 36, cellH = H / 32;
+      let px = 23 * cellW, py = H - 8 * cellH;
+      if (currentShock === "monsoon_stall") { px = 5 * cellW; py = H - 8 * cellH; }
+      else if (currentShock === "custom") { px = (customCenter.c + 0.5) * cellW; py = H - (customCenter.r + 0.5) * cellH; }
+      const radius = 10 + 14 * (0.5 + 0.5 * Math.sin(pulseTick));
+      ctx.strokeStyle = `rgba(250, 204, 21, ${0.75 - 0.45 * (0.5 + 0.5 * Math.sin(pulseTick))})`;
+      ctx.lineWidth = 2.0;
+      ctx.beginPath();
+      ctx.arc(px, py, radius, 0, Math.PI * 2);
+      ctx.stroke();
+    }
+    ctx.restore();
+  }
+  requestAnimationFrame(animateWindOverlay);
+}
+
 window.addEventListener("DOMContentLoaded", () => {
   checkHealth();
   runSimulation();
+  requestAnimationFrame(animateWindOverlay);
 });

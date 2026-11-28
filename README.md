@@ -2,7 +2,7 @@
 
 **Track 2: Multiverse of Monsoon — Earth-System Modelling & Climate Simulation**  
 **Team:** Prince Kumar & Nafees Hyder  
-Built for the Yugaantar DevForge Hackathon (inspired by ISRO's Bharatiya Antariksh Hackathon PS-5).
+Built for the Yugaantar DevForge Hackathon
 
 ---
 
